@@ -14,7 +14,7 @@ file Gazebo loads. Change the drone there and both simulators follow.
 |---|---|---|
 | 1 | One course file → Gazebo world + MuJoCo scene | done |
 | 2 | MuJoCo twin, checked against Gazebo | done: within 5 mm and 0.4° over a 2 s open-loop flight |
-| 3 | Obstacle course (`delivery_city`) flown by the PID mission with a path planner | next |
+| 3 | Obstacle course (`delivery_city`) flown by the PID mission with a path planner | done: all 4 deliveries in Gazebo, closest approach 0.47 m |
 | 4 | Race course (`race_gates`) learned with PPO on the GPU (MJX) | planned |
 | 5 | The trained policy flying in Gazebo as a ROS 2 node (ONNX) | planned |
 | 6 | PID vs MPC vs neural network on the same courses | planned |
@@ -81,6 +81,37 @@ Open the MuJoCo scene in the viewer:
 .venv/bin/python -m mujoco.viewer --mjcf generated/race_gates.xml
 ```
 
+## Flying around buildings (planned missions)
+
+`delivery_city` is bumble-bee's delivery area with six buildings in the way: 7 of the mission's 9
+straight-line legs run through one. A course's `mission:` block lists the home pad, cruise height
+and pickup → drop pairs. The planner then routes every leg around the buildings, offline:
+
+```bash
+.venv/bin/python scripts/plan_mission.py delivery_city    # -> missions/delivery_city.yaml + .png
+```
+
+![Planned mission (yellow) vs straight lines through buildings (red)](missions/delivery_city.png)
+
+- **What counts as an obstacle.** Every building taller than the cruise height (0.7 m), as its
+  footprint rectangle (rotation included).
+- **Clearance.** Paths keep 0.59 m from every wall: the drone's 0.19 m radius (props reach 0.184 m
+  from the centre) plus a 0.40 m margin for tracking error and corner cutting.
+- **Search.** A* on a 5 cm grid, 8-connected, then string pulling: from each kept point, jump to the
+  farthest point still in clear view. A leg that is already clear stays a single straight line.
+- **Result.** 68.7 m flown instead of 64.8 m. No leg is more than 20% longer than its straight line,
+  and planning the whole mission takes under a second.
+
+bumble-bee's `deliver` node flies the file with `-p mission:=<path>/missions/delivery_city.yaml`
+(see bumble-bee's README › Flying around obstacles). In a headless Gazebo run on
+`generated/delivery_city.world`, it delivered all four parcels to their pads and landed home. The
+drone's centre came no closer than 0.47 m to a wall, so the props kept 0.28 m clear. Check any
+flight log the same way:
+
+```bash
+.venv/bin/python scripts/check_clearance.py delivery_city pose.csv   # CSV columns t,x,y,z
+```
+
 ## How the MuJoCo twin is built
 
 - **Body.** One free body carrying the whole drone's mass (0.73 kg), centre of mass and inertia,
@@ -126,8 +157,11 @@ bumble_bee_gym/
   course.py   course YAML → dataclasses
   worlds.py   course → Gazebo SDF world and MuJoCo MJCF scene
   parity.py   shared open-loop profile, MuJoCo replay, comparison
-courses/      course definitions
-scripts/      build_worlds.py, render_course.py, run_gazebo_parity.sh, gazebo_parity_probe.py (ROS 2 node)
+  planner.py  A* around building footprints + string pulling; plans a course's whole mission
+courses/      course definitions (delivery_city also defines its mission)
+missions/     planned missions for bumble-bee's deliver node (generated, kept in git)
+scripts/      build_worlds.py, render_course.py, plan_mission.py, check_clearance.py,
+              run_gazebo_parity.sh, gazebo_parity_probe.py (ROS 2 node)
 docs/media/   course renders
 tests/        twin and course tests, with the recorded Gazebo flight in tests/data/
 ```

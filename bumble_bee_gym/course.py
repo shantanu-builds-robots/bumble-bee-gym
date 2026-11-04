@@ -10,6 +10,10 @@ pads:      [{xyz: [0.5, 0.5]}]                       # 1 x 1 x 0.1 m landing pad
 parcels:   [{model: box_0, xyz: [0.5, 2.0]}]         # 12 cm, 0.1 kg boxes from bumble-bee's models
 buildings: [{xyz: [3, 4], size: [2, 2, 6], yaw: 0}]  # boxes standing on the ground
 gates:     [{xyz: [4, 0, 1.5], yaw: 90, opening: [0.8, 0.8], frame: 0.1, depth: 0.05}]
+mission:                                             # optional: what bumble-bee's deliver node flies
+  home: [0.5, 0.5]
+  cruise: 0.7                                        # transit height [m]
+  deliveries: [{pickup: [0.5, 2.0], drop: [0.5, 9.5]}]
 ```
 
 A gate's opening is centred on ``xyz``; the drone passes through it along the gate's local x axis
@@ -64,6 +68,13 @@ class Building:
 
 
 @dataclass(frozen=True)
+class Mission:
+    home: np.ndarray                                    # x, y of the home pad centre
+    cruise: float                                       # transit height [m]
+    deliveries: tuple[tuple[np.ndarray, np.ndarray], ...]  # (pickup x/y, drop x/y), in order
+
+
+@dataclass(frozen=True)
 class Course:
     name: str
     description: str
@@ -73,12 +84,19 @@ class Course:
     parcels: tuple[tuple[str, np.ndarray], ...] = ()
     buildings: tuple[Building, ...] = ()
     gates: tuple[Gate, ...] = ()
+    mission: Mission | None = None
     extra: dict = field(default_factory=dict)
 
 
 def _xyz(v, z=0.0) -> np.ndarray:
     v = [float(x) for x in v]
     return np.array(v if len(v) == 3 else v + [z])
+
+
+def _mission(m: dict) -> Mission:
+    xy = lambda v: np.array([float(v[0]), float(v[1])])  # noqa: E731
+    return Mission(home=xy(m["home"]), cruise=float(m.get("cruise", 0.7)),
+                   deliveries=tuple((xy(d["pickup"]), xy(d["drop"])) for d in m["deliveries"]))
 
 
 def load(name_or_path: str | Path) -> Course:
@@ -100,6 +118,7 @@ def load(name_or_path: str | Path) -> Course:
         gates=tuple(Gate(_xyz(g["xyz"]), float(g.get("yaw", 0)), tuple(g.get("opening", [0.8, 0.8])),
                          float(g.get("frame", 0.1)), float(g.get("depth", 0.05)))
                     for g in d.get("gates", [])),
+        mission=_mission(d["mission"]) if "mission" in d else None,
         extra={k: v for k, v in d.items()
-               if k not in {"name", "description", "spawn", "pads", "parcels", "buildings", "gates"}},
+               if k not in {"name", "description", "spawn", "pads", "parcels", "buildings", "gates", "mission"}},
     )
