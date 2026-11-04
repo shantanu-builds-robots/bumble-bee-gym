@@ -1,0 +1,16 @@
+[project]
+name = "bumble-bee-gym"
+version = "0.1.0"
+description = "MuJoCo twin, courses and learning environments for the Bumble Bee quadrotor"
+requires-python = ">=3.10,<3.13"
+dependencies = ["mujoco>=3.1", "numpy", "pyyaml"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["bumble_bee_gym"]

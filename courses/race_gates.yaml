@@ -1,0 +1,17 @@
+name: race_gates
+description: >
+  Eight gates on a loop about 16 m by 10 m, at heights from 1 m to 2.5 m. Gate 5 is the
+  "thread the needle" gate: a 0.5 m opening for a drone about 0.30 m across, props included.
+  Fly them in order and return through gate 0 to finish a lap.
+spawn: {xyz: [0, 0, 0.1], yaw: 0}
+pads:
+  - {xyz: [0, 0]}
+gates:
+  - {xyz: [3.0,  0.0, 1.2], yaw: 0,   opening: [0.9, 0.9]}
+  - {xyz: [8.0,  0.5, 1.8], yaw: 15,  opening: [0.8, 0.8]}
+  - {xyz: [12.5, 3.5, 2.5], yaw: 70,  opening: [0.8, 0.8]}
+  - {xyz: [11.0, 8.0, 1.5], yaw: 160, opening: [0.8, 0.8]}
+  - {xyz: [6.5,  9.5, 1.0], yaw: 180, opening: [0.8, 0.8]}
+  - {xyz: [2.0,  8.0, 1.6], yaw: 215, opening: [0.5, 0.5]}
+  - {xyz: [-2.0, 5.0, 2.2], yaw: 260, opening: [0.8, 0.8]}
+  - {xyz: [-2.5, 1.5, 1.4], yaw: 300, opening: [0.8, 0.8]}

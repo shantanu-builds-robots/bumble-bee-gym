@@ -1,0 +1,3 @@
+name: empty
+description: Flat ground and nothing else. Used by the Gazebo/MuJoCo parity tests.
+spawn: {xyz: [0, 0, 2.0], yaw: 0}
