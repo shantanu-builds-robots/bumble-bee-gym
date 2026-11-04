@@ -36,6 +36,12 @@ uv venv --python 3.12 && uv pip install -e '.[dev]'   # or: python -m venv .venv
 
 ## Courses
 
+| `race_gates`, from the start line | `race_gates`, the 0.5 m needle gate | `delivery_city` |
+|---|---|---|
+| ![](docs/media/race_gates_start.png) | ![](docs/media/race_gates_needle.png) | ![](docs/media/delivery_city_overview.png) |
+
+MuJoCo renders from `scripts/render_course.py <course>` (offscreen on the GPU, no window).
+
 A course is a short YAML file in `courses/`. Coordinates are metres, z up, yaw in degrees.
 
 | Course | What's in it |
@@ -121,6 +127,7 @@ bumble_bee_gym/
   worlds.py   course → Gazebo SDF world and MuJoCo MJCF scene
   parity.py   shared open-loop profile, MuJoCo replay, comparison
 courses/      course definitions
-scripts/      build_worlds.py, run_gazebo_parity.sh, gazebo_parity_probe.py (ROS 2 node)
+scripts/      build_worlds.py, render_course.py, run_gazebo_parity.sh, gazebo_parity_probe.py (ROS 2 node)
+docs/media/   course renders
 tests/        twin and course tests, with the recorded Gazebo flight in tests/data/
 ```
