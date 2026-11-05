@@ -105,11 +105,18 @@ and pickup → drop pairs. The planner then routes every leg around the building
 bumble-bee's `deliver` node flies the file with `-p mission:=<path>/missions/delivery_city.yaml`
 (see bumble-bee's README › Flying around obstacles). In a headless Gazebo run on
 `generated/delivery_city.world`, it delivered all four parcels to their pads and landed home. The
-drone's centre came no closer than 0.47 m to a wall, so the props kept 0.28 m clear. Check any
-flight log the same way:
+drone's centre came no closer than 0.47 m to a wall, so the props kept 0.28 m clear. A second, recorded run came
+no closer than 0.53 m.
+
+![The recorded run, replayed from Gazebo's state log at 10x (yellow trail = the drone's last 12 s)](docs/media/delivery_city_flight.gif)
+
+![Flown in Gazebo (green) over the planned route (yellow)](docs/media/delivery_city_flight.png)
+
+Check any flight log the same way, or draw it over the plan:
 
 ```bash
 .venv/bin/python scripts/check_clearance.py delivery_city pose.csv   # CSV columns t,x,y,z
+.venv/bin/python scripts/plot_flight.py delivery_city pose.csv -o flight.png
 ```
 
 ## How the MuJoCo twin is built
@@ -160,7 +167,7 @@ bumble_bee_gym/
   planner.py  A* around building footprints + string pulling; plans a course's whole mission
 courses/      course definitions (delivery_city also defines its mission)
 missions/     planned missions for bumble-bee's deliver node (generated, kept in git)
-scripts/      build_worlds.py, render_course.py, plan_mission.py, check_clearance.py,
+scripts/      build_worlds.py, render_course.py, plan_mission.py, check_clearance.py, plot_flight.py,
               run_gazebo_parity.sh, gazebo_parity_probe.py (ROS 2 node)
 docs/media/   course renders
 tests/        twin and course tests, with the recorded Gazebo flight in tests/data/

@@ -69,6 +69,8 @@ def to_sdf(course: Course) -> str:
       <real_time_update_rate>{int(round(1 / TIMESTEP))}</real_time_update_rate>
     </physics>
     <scene>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
       <ambient>0.4 0.4 0.4 1</ambient>
       <background>0.7 0.7 0.7 1</background>
       <shadows>1</shadows>
