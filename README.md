@@ -102,6 +102,12 @@ and pickup → drop pairs. The planner then routes every leg around the building
 - **Result.** 68.7 m flown instead of 64.8 m. No leg is more than 20% longer than its straight line,
   and planning the whole mission takes under a second.
 
+- **Trajectories.** Each leg also gets a minimum-snap curve through the same route
+  (`bumble_bee_gym/trajectory.py`): 7th-order segments, smooth up to the 6th derivative, at rest at both
+  ends, at most 2 m/s and 2 m/s². Long runs get extra knots every metre so the speed can plateau; segment
+  times are scaled to the limits, then shortened one at a time while they hold; any segment whose curve
+  comes within 0.55 m of a wall is split and refitted. The whole mission plans in about 8 s.
+
 bumble-bee's `deliver` node flies the file with `-p mission:=<path>/missions/delivery_city.yaml`
 (see bumble-bee's README › Flying around obstacles). In a headless Gazebo run on
 `generated/delivery_city.world`, it delivered all four parcels to their pads and landed home. The
@@ -111,6 +117,20 @@ no closer than 0.53 m.
 ![The recorded run, replayed from Gazebo's state log at 10x (yellow trail = the drone's last 12 s)](docs/media/delivery_city_flight.gif)
 
 ![Flown in Gazebo (green) over the planned route (yellow)](docs/media/delivery_city_flight.png)
+
+Flying the trajectories (`-p route_mode:=trajectory`) against steering at each corner, same route, same
+Gazebo world, both with the controller timed from the pose stamps:
+
+| | Corner by corner | Min-snap trajectory |
+|---|---|---|
+| Time flying between stops (to within 10 cm of each pad) | 107.6 s | 74.2 s |
+| Whole mission, first leg to home | 189.0 s | 164.1 s |
+| Near-stops mid-leg (< 0.3 m/s after > 0.6 m/s, > 0.5 m from the pad) | 10 | 0 |
+| Top speed | 3.3 m/s | 2.0 m/s |
+| Closest approach to a wall | 0.50 m | 0.47 m |
+
+All of the gain is at the corners: on the long straight legs the corner-by-corner controller sprints at
+3.3 m/s and is as fast or faster.
 
 Check any flight log the same way, or draw it over the plan:
 
