@@ -15,7 +15,7 @@ file Gazebo loads. Change the drone there and both simulators follow.
 | 1 | One course file → Gazebo world + MuJoCo scene | done |
 | 2 | MuJoCo twin, checked against Gazebo | done: within 5 mm and 0.4° over a 2 s open-loop flight |
 | 3 | Obstacle course (`delivery_city`) flown by the PID mission with a path planner | done: all 4 deliveries in Gazebo, closest approach 0.47 m |
-| 4 | Race course (`race_gates`) learned with PPO on the GPU (MJX) | planned |
+| 4 | Race course (`race_gates`) learned with PPO on the GPU (MJX) | race learned and flown in Gazebo at real time (10/10 runs) |
 | 5 | The trained policy flying in Gazebo as a ROS 2 node (ONNX) | planned |
 | 6 | PID vs MPC vs neural network on the same courses | planned |
 
@@ -192,3 +192,61 @@ scripts/      build_worlds.py, render_course.py, plan_mission.py, check_clearanc
 docs/media/   course renders
 tests/        twin and course tests, with the recorded Gazebo flight in tests/data/
 ```
+
+## Learning: one hoop
+
+`courses/one_hoop.yaml`: a 0.8 m hoop 1.5 m up. Each episode the drone starts 2 to 5 m in front of it at a random
+height, sideways offset, attitude and velocity, and has 5 s to fly through. The policy commands the four rotor
+speeds at 100 Hz, as bumble-bee's `fly` node does (`bumble_bee_gym/learn/hoop_env.py` has the observation, reward
+and the frame-touch check).
+
+Training runs in sprout-gym's GPU image (`sprout-playground`: JAX, MuJoCo MJX, Brax PPO):
+
+```bash
+bumble_bee_gym/learn/run.sh hoop_04 train --timesteps 60e6     # ~3.5 min, shares the GPU (35% memory cap)
+bumble_bee_gym/learn/run.sh hoop_04 play                       # score 1000 random starts + outputs/hoop_04/hoop.mp4
+```
+
+| Run | Steps | Through the hoop (1000 random starts) | Time to go through | Speed through |
+|---|---|---|---|---|
+| hoop_04 | 64M | 96.3% (3.7% touch the frame) | 0.75 s | 10.6 m/s |
+
+Nothing limits its speed yet, so it learns to rush the hoop; the physics has no air drag.
+
+## Racing the gates, at real time in Gazebo
+
+`learn/gates_env.py` races `race_gates` lap after lap from random starts on every leg. Training includes the delays
+and imperfections of the real control loop (`learn/realism.py`). Each episode draws:
+
+- a 2–12 ms command delay, plus 0–6 ms of jitter each step;
+- up to 15 ms of motor lag;
+- drag;
+- ±3% thrust;
+- sensor noise.
+
+Gazebo at real time measured 5–10 ms from pose to command, with occasional spikes to 20 ms. Pass
+`--set real.enabled=false` for instant, perfect physics.
+
+```bash
+bumble_bee_gym/learn/run.sh gates_07 train --env gates --timesteps 150e6 \
+    --restore /app/outputs/gates_02/checkpoints/000024576000 --ppo learning_rate=3e-5 num_evals=30
+bumble_bee_gym/learn/run.sh gates_07 play_gates --checkpoint 000019660800 --no_film   # score 1000 random starts
+python -m bumble_bee_gym.learn.export_policy --name gates_07 --checkpoint 000019660800  # (playground image) -> .npz
+scripts/run_gazebo_race.sh outputs/gates_07/policy_000019660800.npz 15                  # Gazebo, real time
+```
+
+In Gazebo, `scripts/gazebo_race_pilot.py` flies like a flight computer:
+
+- It runs a 100 Hz wall-clock loop on the newest pose, so it never falls behind.
+- It sends rotor speeds to bumble-bee's plugin on `/motor_speed`.
+- It logs how old each pose was when its command went out.
+
+Gazebo runs at real time by default; `SLOW=1` runs it at a tenth of real time.
+
+| Policy | MuJoCo: 1000 random starts, with the effects | Without them | Gazebo, real time, 10 runs from the start line |
+|---|---|---|---|
+| gates_02 @ 24.6M | 12% laps, 93% crash | 99% laps, 1% crash | 10/10 complete, 33 gates in 15 s |
+| gates_07 @ 19.7M | 92% laps, 11% crash | 96% laps, 4% crash | 10/10 complete, 32 gates in 15 s |
+
+PPO on this task is unstable: runs peak, then collapse into touching gate frames. So pick the checkpoint by scoring
+the saved ones (`--checkpoint`), not by taking the last one.

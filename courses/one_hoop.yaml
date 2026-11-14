@@ -1,0 +1,7 @@
+name: one_hoop
+description: >
+  A single 0.8 m hoop, 1.5 m up, facing +x. The first learning task: the drone starts somewhere
+  2 to 5 m in front of it, at a random height and attitude, and has to fly through.
+spawn: {xyz: [-3.5, 0, 1.5], yaw: 0}
+gates:
+  - {xyz: [0, 0, 1.5], yaw: 0, opening: [0.8, 0.8]}
