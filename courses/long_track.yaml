@@ -1,0 +1,55 @@
+name: long_track
+description: >
+  A point-to-point race, about 130 m from the start flags to the finish arch, that gets harder section by
+  section: wide warm-up gates, a slalom between pillars, a climb and dive, a hairpin, a hop over a wall, tight
+  gates, and the 0.5 m needle before the finish. Built for the ghost-race film (PID vs NMPC vs PPO).
+loop: false
+spawn: {xyz: [0.0, 0.0, 1.2], yaw: 0}
+pads:
+  - {xyz: [0, 0]}
+gates:
+  - {xyz: [8, 0, 1.5], yaw: 0, opening: [1.2, 1.2]}
+  - {xyz: [16, 0, 2.0], yaw: 0, opening: [1.2, 1.2]}
+  - {xyz: [24, 0, 2.0], yaw: 7, opening: [1.0, 1.0]}
+  - {xyz: [33, 2.0, 1.8], yaw: 0, opening: [0.9, 0.9]}
+  - {xyz: [39, -2.0, 1.8], yaw: 0, opening: [0.9, 0.9]}
+  - {xyz: [45, 2.0, 1.8], yaw: 0, opening: [0.9, 0.9]}
+  - {xyz: [51, -2.0, 1.8], yaw: 0, opening: [0.9, 0.9]}
+  - {xyz: [58, 0, 4.5], yaw: 9, opening: [0.9, 0.9]}
+  - {xyz: [64, 0, 1.0], yaw: 14, opening: [0.9, 0.9]}
+  - {xyz: [70, 3, 3.0], yaw: 42, opening: [0.9, 0.9]}
+  - {xyz: [74, 9, 2.0], yaw: 90, opening: [0.9, 0.9]}
+  - {xyz: [70, 14, 2.0], yaw: 156, opening: [0.8, 0.8]}
+  - {xyz: [63, 14, 2.0], yaw: 180, opening: [0.8, 0.8]}
+  - {xyz: [60, 14, 1.4], yaw: 180, opening: [0.8, 0.8]}
+  - {xyz: [52, 14, 1.4], yaw: 180, opening: [0.8, 0.8]}
+  - {xyz: [45, 11, 1.8], yaw: 180, opening: [0.7, 0.7]}
+  - {xyz: [39, 14, 2.4], yaw: 180, opening: [0.7, 0.7]}
+  - {xyz: [33, 11, 1.6], yaw: -171, opening: [0.6, 0.6]}
+  - {xyz: [26, 12, 1.5], yaw: 180, opening: [0.5, 0.5]}
+  - {xyz: [18, 12, 1.5], yaw: 180, opening: [1.4, 1.4]}
+buildings:   # race obstacles: boxes standing on the ground
+  # slalom pillars, right on the straight line between the slalom gates
+  - {xyz: [30, 0], size: [0.8, 0.8, 6]}
+  - {xyz: [36, 0], size: [0.8, 0.8, 6]}
+  - {xyz: [42, 0], size: [0.8, 0.8, 6]}
+  - {xyz: [48, 0], size: [0.8, 0.8, 6]}
+  # the wall to hop over, between the two low gates
+  - {xyz: [56, 14], size: [0.5, 8, 2.8]}
+  # the needle's channel
+  - {xyz: [29.5, 13.6], size: [0.6, 0.6, 4]}
+  - {xyz: [29.5, 10.4], size: [0.6, 0.6, 4]}
+sections:    # first gate of each section (for the film's banners)
+  - {gate: 0, name: Warm-up}
+  - {gate: 3, name: Slalom}
+  - {gate: 7, name: Climb and dive}
+  - {gate: 10, name: Hairpin}
+  - {gate: 13, name: Wall hop}
+  - {gate: 15, name: Tight gates}
+  - {gate: 18, name: The needle}
+  - {gate: 19, name: Finish}
+flags:       # checkered flags (film only): start line and finish arch
+  - {xyz: [0.5, 1.6], yaw: 0}
+  - {xyz: [0.5, -1.6], yaw: 0}
+  - {xyz: [18, 13.3], yaw: 180}
+  - {xyz: [18, 10.7], yaw: 180}

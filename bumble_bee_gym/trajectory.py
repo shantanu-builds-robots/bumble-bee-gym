@@ -48,18 +48,19 @@ def _deriv_row(s: float, r: int) -> np.ndarray:
 
 @dataclass
 class Trajectory:
-    """Piecewise polynomial in 2-D. Segment i runs for durations[i] seconds; within it, with
-    s = (t - start_i) / durations[i] in [0, 1], position is sum_k coeffs[axis, i, k] * s**k."""
-    waypoints: np.ndarray      # (M + 1, 2)
+    """Piecewise polynomial in D dimensions (2 for the planner's routes at cruise height, 3 for race paths). Segment i
+    runs for durations[i] seconds; within it, with s = (t - start_i) / durations[i] in [0, 1], position is
+    sum_k coeffs[axis, i, k] * s**k."""
+    waypoints: np.ndarray      # (M + 1, D)
     durations: np.ndarray      # (M,)
-    coeffs: np.ndarray         # (2, M, 8)
+    coeffs: np.ndarray         # (D, M, 8)
 
     @property
     def total(self) -> float:
         return float(self.durations.sum())
 
     def evaluate(self, t: np.ndarray, r: int = 0) -> np.ndarray:
-        """r-th time derivative at times t (clipped to the trajectory), shape (len(t), 2)."""
+        """r-th time derivative at times t (clipped to the trajectory), shape (len(t), D)."""
         t = np.clip(np.atleast_1d(np.asarray(t, float)), 0.0, self.total)
         starts = np.concatenate([[0.0], np.cumsum(self.durations)[:-1]])
         seg = np.clip(np.searchsorted(starts, t, side="right") - 1, 0, len(self.durations) - 1)
@@ -102,7 +103,7 @@ def min_snap(waypoints: np.ndarray, durations: np.ndarray) -> Trajectory:
     def put(seg, s, r, scale=1.0):
         A[rows, seg * N_COEF:(seg + 1) * N_COEF] += scale * _deriv_row(s, r) / T[seg] ** r
 
-    b = np.zeros((n, 2))
+    b = np.zeros((n, w.shape[1]))
     for i in range(m):                              # pass through both ends of every segment
         put(i, 0.0, 0); b[rows] = w[i]; rows += 1
         put(i, 1.0, 0); b[rows] = w[i + 1]; rows += 1
@@ -115,8 +116,8 @@ def min_snap(waypoints: np.ndarray, durations: np.ndarray) -> Trajectory:
             put(i + 1, 0.0, r, -1.0)
             rows += 1
     assert rows == n
-    c = np.linalg.solve(A, b)                       # (n, 2)
-    return Trajectory(w, T, c.T.reshape(2, m, N_COEF))
+    c = np.linalg.solve(A, b)                       # (n, D)
+    return Trajectory(w, T, c.T.reshape(w.shape[1], m, N_COEF))
 
 
 def _scale_to_limits(w: np.ndarray, T: np.ndarray, v_max: float, a_max: float) -> Trajectory:
